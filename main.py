@@ -16,13 +16,14 @@ df = pd.DataFrame(candles)
 df[4] = df[4].astype(float)
 
 ema20 = df[4].ewm(span=20).mean().iloc[-1]
+ema50 = df[4].ewm(span=50).mean().iloc[-1]
 
 current_price = df[4].iloc[-1]
-
-if current_price > ema20:
-    trend = "🟢 BTC Trend: Bullish"
+if ema20 > ema50:
+    trend = f"🟢 BTC Bullish\nEMA20: {ema20:.2f}\nEMA50: {ema50:.2f}"
 else:
-    trend = "🔴 BTC Trend: Bearish"
+    trend = f"🔴 BTC Bearish\nEMA20: {ema20:.2f}\nEMA50: {ema50:.2f}"
+
 
 telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
