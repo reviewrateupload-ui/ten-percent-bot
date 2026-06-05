@@ -4,14 +4,23 @@ import requests
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+# Get BTC price from MEXC
+response = requests.get(
+    "https://api.mexc.com/api/v3/ticker/price?symbol=BTCUSDT"
+)
 
-response = requests.post(
-    url,
+btc_price = response.json()["price"]
+
+message = f"📈 BTCUSDT Price: ${btc_price}"
+
+telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+requests.post(
+    telegram_url,
     data={
         "chat_id": CHAT_ID,
-        "text": "🚀 Ten Percent Bot connected successfully"
+        "text": message
     }
 )
 
-print(response.text)
+print(message)
