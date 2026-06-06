@@ -20,7 +20,6 @@ def get_klines(symbol, interval="15m", limit=250):
     )
 
     response = requests.get(url, timeout=15)
-
     data = response.json()
 
     df = pd.DataFrame(data)
@@ -56,6 +55,35 @@ def calculate_rsi(series, period=14):
     return 100 - (100 / (1 + rs))
 
 
+def get_trend(symbol):
+    df = get_klines(symbol)
+
+    close = df["close"]
+
+    ema20 = close.ewm(
+        span=EMA_FAST,
+        adjust=False
+    ).mean().iloc[-1]
+
+    ema50 = close.ewm(
+        span=EMA_MID,
+        adjust=False
+    ).mean().iloc[-1]
+
+    ema200 = close.ewm(
+        span=EMA_SLOW,
+        adjust=False
+    ).mean().iloc[-1]
+
+    if ema20 > ema50 > ema200:
+        return "BULLISH"
+
+    if ema20 < ema50 < ema200:
+        return "BEARISH"
+
+    return "NEUTRAL"
+
+
 def analyze_symbol(symbol):
     df = get_klines(symbol)
 
@@ -89,7 +117,9 @@ def analyze_symbol(symbol):
 
     rsi = float(df["rsi"].iloc[-1])
 
-    current_volume = float(df["volume"].iloc[-1])
+    current_volume = float(
+        df["volume"].iloc[-1]
+    )
 
     avg_volume = (
         df["volume"]
@@ -97,59 +127,85 @@ def analyze_symbol(symbol):
         .mean()
     )
 
+    btc_trend = get_trend("BTCUSDT")
+
     long_score = 0
     short_score = 0
 
     long_reasons = []
     short_reasons = []
 
-    # LONG LOGIC
+    # LONG
 
     if ema20 > ema50 > ema200:
-        long_score += 30
-        long_reasons.append("EMA bullish alignment")
+        long_score += 35
+        long_reasons.append(
+            "EMA bullish alignment"
+        )
 
     if current_price > ema20:
-        long_score += 20
-        long_reasons.append("Price above EMA20")
-
-    if 50 <= rsi <= 70:
-        long_score += 20
-        long_reasons.append("RSI bullish")
-
-    if current_volume > avg_volume:
         long_score += 15
-        long_reasons.append("Volume expansion")
+        long_reasons.append(
+            "Price above EMA20"
+        )
 
-    if rsi > 55:
+    if 55 <= rsi <= 70:
+        long_score += 10
+        long_reasons.append(
+            "RSI bullish"
+        )
+
+    if (
+        current_volume >
+        avg_volume *
+        VOLUME_SPIKE_MULTIPLIER
+    ):
         long_score += 15
-        long_reasons.append("Momentum confirmation")
+        long_reasons.append(
+            "Volume expansion"
+        )
 
-    # SHORT LOGIC
+    if btc_trend == "BULLISH":
+        long_score += 25
+        long_reasons.append(
+            "BTC bullish"
+        )
+
+    # SHORT
 
     if ema20 < ema50 < ema200:
-        short_score += 30
-        short_reasons.append("EMA bearish alignment")
+        short_score += 35
+        short_reasons.append(
+            "EMA bearish alignment"
+        )
 
     if current_price < ema20:
-        short_score += 20
-        short_reasons.append("Price below EMA20")
-
-    if 30 <= rsi <= 50:
-        short_score += 20
-        short_reasons.append("RSI bearish")
-
-    if current_volume > avg_volume:
         short_score += 15
-        short_reasons.append("Volume expansion")
+        short_reasons.append(
+            "Price below EMA20"
+        )
 
-    if rsi < 45:
+    if 30 <= rsi <= 45:
+        short_score += 10
+        short_reasons.append(
+            "RSI bearish"
+        )
+
+    if (
+        current_volume >
+        avg_volume *
+        VOLUME_SPIKE_MULTIPLIER
+    ):
         short_score += 15
-        short_reasons.append("Momentum confirmation")
+        short_reasons.append(
+            "Volume expansion"
+        )
 
-    direction = "NONE"
-    score = 0
-    reasons = ""
+    if btc_trend == "BEARISH":
+        short_score += 25
+        short_reasons.append(
+            "BTC bearish"
+        )
 
     if long_score >= short_score:
         direction = "LONG"
@@ -164,13 +220,19 @@ def analyze_symbol(symbol):
             f"✓ {x}" for x in short_reasons
         )
 
+    if score >= 85:
+        confidence_colour = "🟢"
+    elif score >= 70:
+        confidence_colour = "🟠"
+    else:
+        confidence_colour = "🔴"
+
     expected_move = round(
         (
             abs(current_price - ema20)
             / current_price
             * 100
-        )
-        + 0.4,
+        ) + 0.5,
         2,
     )
 
@@ -178,6 +240,7 @@ def analyze_symbol(symbol):
         "symbol": symbol,
         "direction": direction,
         "score": score,
+        "confidence_colour": confidence_colour,
         "price": round(current_price, 6),
         "expected_move": expected_move,
         "ema20": round(ema20, 6),
