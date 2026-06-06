@@ -39,7 +39,7 @@ def main():
 
             send_signal(
                 coin=signal["symbol"],
-                direction="LONG",
+                direction=signal["direction"],
                 current_price=signal["price"],
                 entry_low=signal["price"],
                 entry_high=signal["price"],
