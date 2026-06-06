@@ -2,5 +2,6 @@
   "wins": 0,
   "losses": 0,
   "breakeven": 0,
-  "cooldown_until": null
+  "cooldown_until": null,
+  "sent_signals": {}
 }
