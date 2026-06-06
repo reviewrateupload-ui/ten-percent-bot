@@ -1,39 +1,47 @@
-print("MAIN START")
+import time
 
 from config import CORE_COINS
-print("CONFIG LOADED")
 
 from scanner import analyze_symbol
-print("SCANNER LOADED")
 
 from telegram_bot import send_signal
-print("TELEGRAM LOADED")
 
-from stats import cooldown_active
-print("STATS LOADED")
+from stats import (
+    cooldown_active,
+    signal_blocked,
+    record_signal,
+)
 
 
-def main():
-    print("ENTERING MAIN")
+def scan_market():
+    print("STARTING SCAN")
 
     if cooldown_active():
         print("COOLDOWN ACTIVE")
         return
 
     for coin in CORE_COINS:
-        print(f"SCANNING {coin}")
-
         try:
-            signal = analyze_symbol(coin)
+            print(f"SCANNING {coin}")
 
-            print(f"ANALYSIS COMPLETE {coin}")
+            signal = analyze_symbol(coin)
 
             if not signal["valid"]:
                 print(
-                    f"NO SIGNAL {coin} | "
-                    f"Score={signal['score']} | "
-                    f"RSI={signal['rsi']} | "
-                    f"Price={signal['price']}"
+                    f"NO SIGNAL {coin} "
+                    f"Score={signal['score']}"
+                )
+                continue
+
+            if signal_blocked(
+                signal["symbol"],
+                signal["direction"],
+                hours=1
+            ):
+                print(
+                    f"BLOCKED "
+                    f"{signal['symbol']} "
+                    f"{signal['direction']}"
                 )
                 continue
 
@@ -49,10 +57,32 @@ def main():
                 reasons=signal["reasons"]
             )
 
-            print(f"SIGNAL SENT {coin}")
+            record_signal(
+                signal["symbol"],
+                signal["direction"]
+            )
+
+            print(
+                f"SENT "
+                f"{signal['symbol']} "
+                f"{signal['direction']}"
+            )
 
         except Exception as e:
-            print(f"ERROR {coin}: {e}")
+            print(
+                f"ERROR {coin}: {e}"
+            )
+
+
+def main():
+    while True:
+        scan_market()
+
+        print(
+            "WAITING 5 MINUTES"
+        )
+
+        time.sleep(300)
 
 
 if __name__ == "__main__":
