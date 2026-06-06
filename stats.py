@@ -11,7 +11,8 @@ def load_stats():
             "wins": 0,
             "losses": 0,
             "breakeven": 0,
-            "cooldown_until": None
+            "cooldown_until": None,
+            "sent_signals": {}
         }
 
     with open(DATA_FILE, "r") as f:
@@ -28,9 +29,19 @@ def record_win():
 
     data["wins"] += 1
 
-    cooldown = datetime.utcnow() + timedelta(hours=6)
+    now = datetime.utcnow()
 
-    data["cooldown_until"] = cooldown.isoformat()
+    tomorrow = (
+        now.replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+        + timedelta(days=1)
+    )
+
+    data["cooldown_until"] = tomorrow.isoformat()
 
     save_stats(data)
 
@@ -54,11 +65,56 @@ def record_breakeven():
 def cooldown_active():
     data = load_stats()
 
-    cooldown_until = data.get("cooldown_until")
+    cooldown_until = data.get(
+        "cooldown_until"
+    )
 
     if not cooldown_until:
         return False
 
-    cooldown_time = datetime.fromisoformat(cooldown_until)
+    cooldown_time = datetime.fromisoformat(
+        cooldown_until
+    )
 
     return datetime.utcnow() < cooldown_time
+
+
+def signal_blocked(
+    coin,
+    direction,
+    hours=1
+):
+    data = load_stats()
+
+    key = f"{coin}_{direction}"
+
+    sent_signals = data.get(
+        "sent_signals",
+        {}
+    )
+
+    if key not in sent_signals:
+        return False
+
+    signal_time = datetime.fromisoformat(
+        sent_signals[key]
+    )
+
+    return (
+        datetime.utcnow() - signal_time
+    ) < timedelta(hours=hours)
+
+
+def record_signal(
+    coin,
+    direction
+):
+    data = load_stats()
+
+    key = f"{coin}_{direction}"
+
+    data["sent_signals"][key] = (
+        datetime.utcnow().isoformat()
+    )
+
+    save_stats(data)
