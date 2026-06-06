@@ -24,20 +24,16 @@ def get_klines(symbol, interval="15m", limit=250):
 
     df = pd.DataFrame(data)
 
-    df.columns = [
-        "open_time",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
-        "close_time",
-        "quote_volume",
-        "trades",
-        "buy_base",
-        "buy_quote",
-        "ignore",
-    ]
+    df = df.iloc[:, :6]
+
+df.columns = [
+    "open_time",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+]
 
     numeric_cols = ["open", "high", "low", "close", "volume"]
 
