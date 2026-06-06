@@ -21,7 +21,7 @@ DYNAMIC_PAIRS = 5
 SCAN_INTERVAL = 60
 
 # Signal settings
-MIN_SCORE = 85
+MIN_SCORE = 70
 MIN_EXPECTED_MOVE = 0.4
 
 # Indicators
