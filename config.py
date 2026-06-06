@@ -21,7 +21,7 @@ DYNAMIC_PAIRS = 5
 SCAN_INTERVAL = 300  # 5 minutes
 
 # Signal settings
-MIN_SCORE = 60
+MIN_SCORE = 70
 HIGH_CONFIDENCE_SCORE = 85
 
 # Trade settings
