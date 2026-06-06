@@ -81,7 +81,7 @@ Expected Move:
 Risk / Reward:
 {rr}:1
 
-Confidence:
+{confidence_colour} Confidence:
 {score}/100
 
 Reasons:
