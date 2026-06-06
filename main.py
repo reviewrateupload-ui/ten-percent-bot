@@ -29,13 +29,13 @@ def main():
             print(f"ANALYSIS COMPLETE {coin}")
 
             if not signal["valid"]:
-    print(
-        f"NO SIGNAL {coin} | "
-        f"Score={signal['score']} | "
-        f"RSI={signal['rsi']} | "
-        f"Price={signal['price']}"
-    )
-    continue
+                print(
+                    f"NO SIGNAL {coin} | "
+                    f"Score={signal['score']} | "
+                    f"RSI={signal['rsi']} | "
+                    f"Price={signal['price']}"
+                )
+                continue
 
             send_signal(
                 coin=signal["symbol"],
