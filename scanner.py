@@ -25,7 +25,6 @@ def get_klines(symbol, interval="15m", limit=250):
 
     df = pd.DataFrame(data)
 
-    # Only keep the columns we actually need
     df = df.iloc[:, :6]
 
     df.columns = [
@@ -37,15 +36,7 @@ def get_klines(symbol, interval="15m", limit=250):
         "volume",
     ]
 
-    numeric_cols = [
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
-    ]
-
-    for col in numeric_cols:
+    for col in ["open", "high", "low", "close", "volume"]:
         df[col] = pd.to_numeric(df[col])
 
     return df
@@ -90,29 +81,15 @@ def analyze_symbol(symbol):
         RSI_PERIOD
     )
 
-    current_price = float(
-        df["close"].iloc[-1]
-    )
+    current_price = float(df["close"].iloc[-1])
 
-    ema20 = float(
-        df["ema20"].iloc[-1]
-    )
+    ema20 = float(df["ema20"].iloc[-1])
+    ema50 = float(df["ema50"].iloc[-1])
+    ema200 = float(df["ema200"].iloc[-1])
 
-    ema50 = float(
-        df["ema50"].iloc[-1]
-    )
+    rsi = float(df["rsi"].iloc[-1])
 
-    ema200 = float(
-        df["ema200"].iloc[-1]
-    )
-
-    rsi = float(
-        df["rsi"].iloc[-1]
-    )
-
-    current_volume = float(
-        df["volume"].iloc[-1]
-    )
+    current_volume = float(df["volume"].iloc[-1])
 
     avg_volume = (
         df["volume"]
@@ -120,28 +97,72 @@ def analyze_symbol(symbol):
         .mean()
     )
 
-    score = 0
+    long_score = 0
+    short_score = 0
 
-    reasons = []
+    long_reasons = []
+    short_reasons = []
+
+    # LONG LOGIC
 
     if ema20 > ema50 > ema200:
-        score += 35
-        reasons.append("EMA alignment")
-
-    if 50 <= rsi <= 70:
-        score += 20
-        reasons.append("RSI strength")
-
-    if (
-        current_volume
-        > avg_volume * VOLUME_SPIKE_MULTIPLIER
-    ):
-        score += 25
-        reasons.append("Volume spike")
+        long_score += 30
+        long_reasons.append("EMA bullish alignment")
 
     if current_price > ema20:
-        score += 20
-        reasons.append("Price above EMA20")
+        long_score += 20
+        long_reasons.append("Price above EMA20")
+
+    if 50 <= rsi <= 70:
+        long_score += 20
+        long_reasons.append("RSI bullish")
+
+    if current_volume > avg_volume:
+        long_score += 15
+        long_reasons.append("Volume expansion")
+
+    if rsi > 55:
+        long_score += 15
+        long_reasons.append("Momentum confirmation")
+
+    # SHORT LOGIC
+
+    if ema20 < ema50 < ema200:
+        short_score += 30
+        short_reasons.append("EMA bearish alignment")
+
+    if current_price < ema20:
+        short_score += 20
+        short_reasons.append("Price below EMA20")
+
+    if 30 <= rsi <= 50:
+        short_score += 20
+        short_reasons.append("RSI bearish")
+
+    if current_volume > avg_volume:
+        short_score += 15
+        short_reasons.append("Volume expansion")
+
+    if rsi < 45:
+        short_score += 15
+        short_reasons.append("Momentum confirmation")
+
+    direction = "NONE"
+    score = 0
+    reasons = ""
+
+    if long_score >= short_score:
+        direction = "LONG"
+        score = long_score
+        reasons = "\n".join(
+            f"✓ {x}" for x in long_reasons
+        )
+    else:
+        direction = "SHORT"
+        score = short_score
+        reasons = "\n".join(
+            f"✓ {x}" for x in short_reasons
+        )
 
     expected_move = round(
         (
@@ -155,6 +176,7 @@ def analyze_symbol(symbol):
 
     signal = {
         "symbol": symbol,
+        "direction": direction,
         "score": score,
         "price": round(current_price, 6),
         "expected_move": expected_move,
@@ -162,10 +184,8 @@ def analyze_symbol(symbol):
         "ema50": round(ema50, 6),
         "ema200": round(ema200, 6),
         "rsi": round(rsi, 2),
-        "reasons": "\n".join(
-            f"✓ {x}" for x in reasons
-        ),
-        "valid": True,
+        "reasons": reasons,
+        "valid": score >= MIN_SCORE,
     }
 
     return signal
