@@ -28,7 +28,8 @@ def send_signal(
     expected_move,
     stop_loss,
     score,
-    reasons
+    reasons,
+    confidence_colour="🟠"
 ):
     if direction == "LONG":
         tp_price = round(
