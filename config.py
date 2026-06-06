@@ -14,14 +14,17 @@ CORE_COINS = [
     "HYPEUSDT"
 ]
 
-# Number of extra high-volume coins
+# Dynamic high-volume pairs
 DYNAMIC_PAIRS = 5
 
 # Scanner settings
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = 300  # 5 minutes
 
 # Signal settings
 MIN_SCORE = 60
+HIGH_CONFIDENCE_SCORE = 85
+
+# Trade settings
 MIN_EXPECTED_MOVE = 0.4
 
 # Indicators
@@ -35,8 +38,11 @@ EMA_SLOW = 200
 VOLUME_LOOKBACK = 20
 VOLUME_SPIKE_MULTIPLIER = 1.5
 
-# Cooldown after a win
-WIN_COOLDOWN_HOURS = 6
+# BTC Filter
+BTC_FILTER = True
+
+# Cooldown
+WIN_COOLDOWN_HOURS = 24
 
 # Timeframes
 TREND_TIMEFRAME = "1h"
