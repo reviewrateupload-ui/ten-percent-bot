@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+
 from config import (
     MEXC_BASE_URL,
     RSI_PERIOD,
@@ -24,18 +25,25 @@ def get_klines(symbol, interval="15m", limit=250):
 
     df = pd.DataFrame(data)
 
+    # Only keep the columns we actually need
     df = df.iloc[:, :6]
 
-df.columns = [
-    "open_time",
-    "open",
-    "high",
-    "low",
-    "close",
-    "volume",
-]
+    df.columns = [
+        "open_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    ]
 
-    numeric_cols = ["open", "high", "low", "close", "volume"]
+    numeric_cols = [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    ]
 
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col])
@@ -62,21 +70,49 @@ def analyze_symbol(symbol):
 
     close = df["close"]
 
-    df["ema20"] = close.ewm(span=EMA_FAST, adjust=False).mean()
-    df["ema50"] = close.ewm(span=EMA_MID, adjust=False).mean()
-    df["ema200"] = close.ewm(span=EMA_SLOW, adjust=False).mean()
+    df["ema20"] = close.ewm(
+        span=EMA_FAST,
+        adjust=False
+    ).mean()
 
-    df["rsi"] = calculate_rsi(close, RSI_PERIOD)
+    df["ema50"] = close.ewm(
+        span=EMA_MID,
+        adjust=False
+    ).mean()
 
-    current_price = float(df["close"].iloc[-1])
+    df["ema200"] = close.ewm(
+        span=EMA_SLOW,
+        adjust=False
+    ).mean()
 
-    ema20 = float(df["ema20"].iloc[-1])
-    ema50 = float(df["ema50"].iloc[-1])
-    ema200 = float(df["ema200"].iloc[-1])
+    df["rsi"] = calculate_rsi(
+        close,
+        RSI_PERIOD
+    )
 
-    rsi = float(df["rsi"].iloc[-1])
+    current_price = float(
+        df["close"].iloc[-1]
+    )
 
-    current_volume = float(df["volume"].iloc[-1])
+    ema20 = float(
+        df["ema20"].iloc[-1]
+    )
+
+    ema50 = float(
+        df["ema50"].iloc[-1]
+    )
+
+    ema200 = float(
+        df["ema200"].iloc[-1]
+    )
+
+    rsi = float(
+        df["rsi"].iloc[-1]
+    )
+
+    current_volume = float(
+        df["volume"].iloc[-1]
+    )
 
     avg_volume = (
         df["volume"]
@@ -96,7 +132,10 @@ def analyze_symbol(symbol):
         score += 20
         reasons.append("RSI strength")
 
-    if current_volume > avg_volume * VOLUME_SPIKE_MULTIPLIER:
+    if (
+        current_volume
+        > avg_volume * VOLUME_SPIKE_MULTIPLIER
+    ):
         score += 25
         reasons.append("Volume spike")
 
@@ -105,9 +144,11 @@ def analyze_symbol(symbol):
         reasons.append("Price above EMA20")
 
     expected_move = round(
-        abs(current_price - ema20)
-        / current_price
-        * 100
+        (
+            abs(current_price - ema20)
+            / current_price
+            * 100
+        )
         + 0.4,
         2,
     )
