@@ -54,7 +54,7 @@ def scan_market():
                 expected_move=signal["expected_move"],
                 stop_loss=0.4,
                 score=signal["score"],
-                reasons=signal["reasons"]
+                reasons=signal["reasons"],
                 confidence_colour=signal["confidence_colour"],
             )
 
