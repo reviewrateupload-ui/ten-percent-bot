@@ -55,6 +55,7 @@ def scan_market():
                 stop_loss=0.4,
                 score=signal["score"],
                 reasons=signal["reasons"]
+                confidence_colour=signal["confidence_colour"],
             )
 
             record_signal(
