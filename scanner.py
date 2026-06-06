@@ -165,7 +165,7 @@ def analyze_symbol(symbol):
         "reasons": "\n".join(
             f"✓ {x}" for x in reasons
         ),
-        "valid": score >= MIN_SCORE,
+        "valid": True,
     }
 
     return signal
